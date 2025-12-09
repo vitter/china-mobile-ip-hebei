@@ -1,5 +1,4 @@
 requests
 aiohttp
-ip2region
 tqdm
 python-dotenv
