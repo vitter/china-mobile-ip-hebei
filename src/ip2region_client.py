@@ -1,5 +1,6 @@
-from ip2region import Ip2Region
 from pathlib import Path
+from ip2region.xdbReader import XdbReader
+from ip2region.xdbSearcher import XdbSearcher
 
 class IP2RegionClient:
     def __init__(self, xdb_path="../data/ip2region.xdb"):
