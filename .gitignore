@@ -1,0 +1,8 @@
+.env
+__pycache__/
+*.log
+*.xdb
+.vscode/
+
+# Allow output files to be committed
+# output/ directory is tracked, but you can use git add -f to force add files

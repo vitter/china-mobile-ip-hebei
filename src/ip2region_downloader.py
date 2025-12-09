@@ -12,11 +12,15 @@ URLS = [
     "https://github.com/lionsoul2014/ip2region/blob/master/data/ip2region_v4.xdb?raw=true",
     # 多种 ghproxy 镜像
     "https://ghproxy.net/https://raw.githubusercontent.com/lionsoul2014/ip2region/master/data/ip2region_v4.xdb",
-    "https://mirror.ghproxy.com/https://raw.githubusercontent.com/lionsoul2014/ip2region/master/data/ip2region_v4.xdb",
+    "https://gh-proxy.org/https://raw.githubusercontent.com/lionsoul2014/ip2region/master/data/ip2region_v4.xdb",
 ]
 
+def get_db_path():
+    """获取数据库文件的绝对路径"""
+    from pathlib import Path
+    return Path(__file__).parent.parent / 'data' / 'ip2region_v4.xdb'
 
-DB_PATH = "./data/ip2region_v4.xdb"
+DB_PATH = get_db_path()
 
 def http_download(url, file_path, retry=3):
     for i in range(retry):
@@ -40,7 +44,7 @@ def download_xdb():
     p.parent.mkdir(parents=True, exist_ok=True)
 
     if p.exists() and p.stat().st_size > 0:
-        print("ip2region.xdb already exists, skip download.")
+        print("ip2region_v4.xdb already exists, skip download.")
         return
 
     for url in URLS:
