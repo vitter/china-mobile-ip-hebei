@@ -30,7 +30,7 @@ jobs:
           mkdir -p data
           if [ ! -f data/ip2region_v4.xdb ]; then
             echo "Downloading ip2region database..."
-            curl -fsSL "https://github.com/lionsoul2014/ip2region/raw/master/data/ip2region.xdb" -o data/ip2region_v4.xdb
+            curl -fsSL "https://raw.githubusercontent.com/lionsoul2014/ip2region/master/data/ip2region_v4.xdb" -o data/ip2region_v4.xdb
           fi
 
       - name: Download cmcc.txt from upstream
