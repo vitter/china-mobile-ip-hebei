@@ -1,19 +1,51 @@
 import requests
+import time
 from pathlib import Path
 
-URL = "https://github.com/lionsoul2014/ip2region/raw/refs/heads/master/data/ip2region_v4.xdb"
-OUT = Path("../data/ip2region.xdb")
+URLS = [
+    # 官方 Raw 地址（正确）
 
-def download_xdb(force=False):
-    if OUT.exists() and not force:
-        print("ip2region xdb already exists, skip download.")
-        return OUT
-    OUT.parent.mkdir(parents=True, exist_ok=True)
-    r = requests.get(URL, timeout=60)
-    r.raise_for_status()
-    OUT.write_bytes(r.content)
-    print("Downloaded ip2region xdb to:", OUT.resolve())
-    return OUT
+    "https://raw.githubusercontent.com/lionsoul2014/ip2region/master/data/ip2region_v4.xdb",
 
-if __name__ == "__main__":
-    download_xdb()
+
+    # GitHub 页面 raw 参数
+    "https://github.com/lionsoul2014/ip2region/blob/master/data/ip2region_v4.xdb?raw=true",
+    # 多种 ghproxy 镜像
+    "https://ghproxy.net/https://raw.githubusercontent.com/lionsoul2014/ip2region/master/data/ip2region_v4.xdb",
+    "https://mirror.ghproxy.com/https://raw.githubusercontent.com/lionsoul2014/ip2region/master/data/ip2region_v4.xdb",
+]
+
+
+DB_PATH = "./data/ip2region_v4.xdb"
+
+def http_download(url, file_path, retry=3):
+    for i in range(retry):
+        try:
+            print(f"Downloading: {url} (attempt {i+1}/{retry})")
+            with requests.get(url, timeout=30, stream=True) as r:
+                r.raise_for_status()
+                with open(file_path, "wb") as f:
+                    for chunk in r.iter_content(chunk_size=8192):
+                        if chunk:
+                            f.write(chunk)
+            return True
+        except Exception as e:
+            print(f"[WARN] failed: {e}")
+            time.sleep(1)
+    return False
+
+
+def download_xdb():
+    p = Path(DB_PATH)
+    p.parent.mkdir(parents=True, exist_ok=True)
+
+    if p.exists() and p.stat().st_size > 0:
+        print("ip2region.xdb already exists, skip download.")
+        return
+
+    for url in URLS:
+        if http_download(url, DB_PATH):
+            print(f"[OK] downloaded from {url}")
+            return
+
+    raise RuntimeError("❌ All download URLs failed! Please check network.")
