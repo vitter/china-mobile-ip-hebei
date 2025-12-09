@@ -1,0 +1,51 @@
+name: Update CMCC Hebei Prefixes
+
+on:
+  schedule:
+    - cron: "0 3 * * *"   # UTC 每日 03:00
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Download cmcc.txt from upstream
+        run: |
+          mkdir -p data
+          curl -fsSL "https://raw.githubusercontent.com/vitter/china-mainland-asn/refs/heads/main/asn_txt/cmcc.txt" -o data/cmcc.txt || true
+
+      - name: Run scanner
+        env:
+          PYTHONUNBUFFERED: 1
+        run: |
+          python src/main.py --cmcc data/cmcc.txt --sample 3 --use-cache
+
+      - name: Commit and push results
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add output README.md || true
+          if [ -n "$(git status --porcelain)" ]; then
+            git commit -m "chore(ci): update hebei cmcc cidr (auto) [ci skip]" || true
+            git push origin HEAD
+          else
+            echo "No changes to commit"
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
