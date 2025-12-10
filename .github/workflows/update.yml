@@ -85,7 +85,7 @@ jobs:
         env:
           PYTHONUNBUFFERED: 1
         run: |
-          python src/main.py --cmcc data/cmcc.txt --sample 3 --use-cache
+          python src/main.py --cmcc data/cmcc.txt --sample 3
 
       - name: Commit and push results
         run: |
