@@ -1,6 +1,7 @@
 import aiohttp
 import asyncio
 import json
+import ipaddress
 from pathlib import Path
 from typing import Dict, List
 
@@ -22,6 +23,49 @@ def load_cache() -> Dict[str, List[str]]:
 def save_cache(cache: Dict[str, List[str]]):
     CACHE_PATH.parent.mkdir(parents=True, exist_ok=True)
     CACHE_PATH.write_text(json.dumps(cache, indent=2, ensure_ascii=False), encoding="utf-8")
+
+def split_large_prefixes(prefixes: List[str], max_prefixlen: int = 24) -> List[str]:
+    """
+    将大网段（掩码位数 < max_prefixlen）拆分成小网段
+    
+    Args:
+        prefixes: CIDR 列表
+        max_prefixlen: 最大掩码位数，默认 24（一个 C 类网段）
+    
+    Returns:
+        拆分后的 CIDR 列表
+    
+    Example:
+        ['10.0.0.0/22'] -> ['10.0.0.0/24', '10.0.1.0/24', '10.0.2.0/24', '10.0.3.0/24']
+    """
+    result = []
+    split_count = 0
+    
+    for cidr in prefixes:
+        try:
+            network = ipaddress.IPv4Network(cidr, strict=False)
+            
+            # 如果网段已经是 /24 或更小，直接保留
+            if network.prefixlen >= max_prefixlen:
+                result.append(str(network))
+            else:
+                # 拆分成 /24 子网
+                subnets = list(network.subnets(new_prefix=max_prefixlen))
+                result.extend([str(subnet) for subnet in subnets])
+                split_count += 1
+                
+                # 输出拆分信息（仅对大网段）
+                if network.prefixlen <= 20:  # 只显示 /20 及以上的大网段拆分信息
+                    print(f"  Split {cidr} -> {len(subnets)} x /{max_prefixlen} subnets")
+        
+        except Exception as e:
+            print(f"Warning: Failed to parse {cidr}: {e}")
+            result.append(cidr)  # 解析失败，保留原样
+    
+    if split_count > 0:
+        print(f"✓ Split {split_count} large prefixes into {len(result)} subnets (/{max_prefixlen})")
+    
+    return sorted(set(result))
 
 async def fetch_one(session: aiohttp.ClientSession, asn: int):
     url = API_URL.format(asn=asn)
@@ -75,7 +119,11 @@ async def fetch_all(asns: List[int], use_cache=True, concurrency=20):
     for v in cache.values():
         all_prefixes.extend(v)
 
-    return sorted(set(all_prefixes))
+    # 拆分大网段为 /24 子网，提高采样准确性
+    print("\n正在拆分大网段 (>=/24)...")
+    all_prefixes = split_large_prefixes(sorted(set(all_prefixes)))
+    
+    return all_prefixes
 
 def get_prefixes_sync(asns, use_cache=True, concurrency=20):
     return asyncio.run(fetch_all(asns, use_cache=use_cache, concurrency=concurrency))

@@ -3,16 +3,16 @@ import time
 from pathlib import Path
 
 URLS = [
-    # 官方 Raw 地址（正确）
-
+    # ip2region_update 增强版 (n版) - 推荐使用
+    # 数据更全面，识别率比官方免费版提升 23%
+    "https://github.com/hel2o/ip2region_update/releases/download/250820/ip2region_n.xdb",
+    
+    # CDN 镜像加速
+    "https://ghproxy.net/https://github.com/hel2o/ip2region_update/releases/download/250820/ip2region_n.xdb",
+    "https://gh-proxy.org/https://github.com/hel2o/ip2region_update/releases/download/250820/ip2region_n.xdb",
+    
+    # 备用：官方免费版（数据不全，不推荐）
     "https://raw.githubusercontent.com/lionsoul2014/ip2region/master/data/ip2region_v4.xdb",
-
-
-    # GitHub 页面 raw 参数
-    "https://github.com/lionsoul2014/ip2region/blob/master/data/ip2region_v4.xdb?raw=true",
-    # 多种 ghproxy 镜像
-    "https://ghproxy.net/https://raw.githubusercontent.com/lionsoul2014/ip2region/master/data/ip2region_v4.xdb",
-    "https://gh-proxy.org/https://raw.githubusercontent.com/lionsoul2014/ip2region/master/data/ip2region_v4.xdb",
 ]
 
 def get_db_path():

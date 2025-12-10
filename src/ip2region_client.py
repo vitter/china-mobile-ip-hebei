@@ -39,18 +39,29 @@ class IP2RegionClient:
         return self.search(ip)
     
     def is_hebei_mobile(self, ip):
-        """判断IP是否属于河北移动"""
+        """判断IP是否属于河北移动
+        
+        支持多种数据库格式:
+        - 标准v3: 国家|省份|城市|ISP
+        - 增强版: |国家|省份|城市|区域|街道|ISP|经度|维度
+        - qqwry: 中国–省份|ISP
+        - n版本: 国家|省份||||ISP
+        """
         try:
             region = self.search(ip)
-            if region and '|' in region:
-                parts = region.split('|')
-                # 格式: 国家|省份|城市|ISP
-                if len(parts) >= 4:
-                    province = parts[1] if len(parts) > 1 else ''
-                    isp = parts[3] if len(parts) > 3 else ''
-                    # 检查是否为河北省且运营商包含"移动"
-                    return '河北' in province and '移动' in isp
-            return False
+            if not region:
+                return False
+            
+            # 将整个字符串转为小写进行匹配，提高容错性
+            region_lower = region.lower()
+            full_text = region  # 保留原文用于检查
+            
+            # 检查是否包含"河北"和"移动"关键字（在整个字符串中搜索）
+            has_hebei = '河北' in full_text or '河北省' in full_text
+            has_mobile = '移动' in full_text or '中国移动' in full_text or 'mobile' in region_lower
+            
+            return has_hebei and has_mobile
+            
         except Exception:
             return False
     
