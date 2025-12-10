@@ -2,7 +2,7 @@ name: Update CMCC Hebei Prefixes
 
 on:
   schedule:
-    - cron: "0 3 * * *"   # UTC 每日 03:00
+    - cron: "15 16 * * 0"   # UTC 每周日 16:15 (北京时间周一 00:15)
   workflow_dispatch: {}
 
 permissions:
