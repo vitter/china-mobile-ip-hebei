@@ -80,6 +80,11 @@ jobs:
               exit 1
             fi
           fi
+          echo "📋 Downloaded cmcc.txt content:"
+          cat data/cmcc.txt
+          echo ""
+          echo "📊 ASN count: $(cat data/cmcc.txt | tr ',' '\n' | grep -E '^[0-9]+$' | wc -l)"
+          echo "🔍 Contains AS9808: $(cat data/cmcc.txt | grep -o '9808' || echo 'NO')"
 
       - name: Run scanner
         env:

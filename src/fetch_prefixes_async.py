@@ -183,6 +183,7 @@ async def fetch_all(asns: List[int], use_cache=True, concurrency=5):
         concurrency: 并发数（默认 5，避免触发 API 速率限制）
     """
     print(f"\n🔍 Total ASNs to process: {len(asns)}")
+    print(f"🔢 ASN list: {sorted(asns)}")
     print(f"📋 Use cache: {use_cache}, Concurrency: {concurrency}")
     
     cache = load_cache() if use_cache else {}
