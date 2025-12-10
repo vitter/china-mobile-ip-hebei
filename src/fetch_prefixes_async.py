@@ -2,27 +2,69 @@ import aiohttp
 import asyncio
 import json
 import ipaddress
+import time
+from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 # 获取项目根目录下的data目录
 CACHE_PATH = Path(__file__).parent.parent / 'data' / 'prefixes_cache.json'
 # 使用RIPEstat API - 公开且无需认证
 API_URL = "https://stat.ripe.net/data/announced-prefixes/data.json?resource=AS{asn}"
+# 缓存有效期（天）
+CACHE_EXPIRY_DAYS = 7
+
+def is_cache_expired(cache_data: dict) -> bool:
+    """检查缓存是否过期"""
+    if 'timestamp' not in cache_data:
+        return True
+    
+    cache_time = datetime.fromtimestamp(cache_data['timestamp'])
+    expiry_time = cache_time + timedelta(days=CACHE_EXPIRY_DAYS)
+    is_expired = datetime.now() >= expiry_time
+    
+    if is_expired:
+        age_days = (datetime.now() - cache_time).days
+        print(f"⏰ 缓存已过期（{age_days} 天前创建，有效期 {CACHE_EXPIRY_DAYS} 天）")
+    else:
+        age_days = (datetime.now() - cache_time).days
+        remaining_days = CACHE_EXPIRY_DAYS - age_days
+        print(f"✓ 缓存仍有效（{age_days} 天前创建，还剩 {remaining_days} 天）")
+    
+    return is_expired
 
 def load_cache() -> Dict[str, List[str]]:
     if CACHE_PATH.exists():
         try:
             content = CACHE_PATH.read_text(encoding="utf-8")
             if content.strip():
-                return json.loads(content)
+                cache_data = json.loads(content)
+                
+                # 检查缓存是否过期
+                if is_cache_expired(cache_data):
+                    print("🗑️  删除过期缓存")
+                    CACHE_PATH.unlink()
+                    return {}
+                
+                # 返回缓存的前缀数据（不包括元数据）
+                return {k: v for k, v in cache_data.items() if k not in ['timestamp', 'version']}
         except (json.JSONDecodeError, ValueError):
             pass
     return {}
 
 def save_cache(cache: Dict[str, List[str]]):
     CACHE_PATH.parent.mkdir(parents=True, exist_ok=True)
-    CACHE_PATH.write_text(json.dumps(cache, indent=2, ensure_ascii=False), encoding="utf-8")
+    
+    # 添加时间戳和版本信息
+    cache_data = {
+        'timestamp': time.time(),
+        'version': '1.0',
+        **cache
+    }
+    
+    CACHE_PATH.write_text(json.dumps(cache_data, indent=2, ensure_ascii=False), encoding="utf-8")
+    cache_time = datetime.fromtimestamp(cache_data['timestamp']).strftime('%Y-%m-%d %H:%M:%S')
+    print(f"💾 缓存已保存（创建时间: {cache_time}，有效期: {CACHE_EXPIRY_DAYS} 天）")
 
 def split_large_prefixes(prefixes: List[str], max_prefixlen: int = 24) -> List[str]:
     """
