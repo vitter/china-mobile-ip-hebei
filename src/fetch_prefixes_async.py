@@ -130,7 +130,9 @@ async def fetch_one(session: aiohttp.ClientSession, asn: int, semaphore: asyncio
                 else:
                     await asyncio.sleep(REQUEST_DELAY)
                 
-                async with session.get(url, timeout=30) as r:
+                # 使用更长的超时时间，特别是对于大型 ASN（如 AS9808）
+                timeout = aiohttp.ClientTimeout(total=180, sock_read=90)
+                async with session.get(url, timeout=timeout) as r:
                     # 处理速率限制
                     if r.status == 429:
                         retry_after = int(r.headers.get('Retry-After', RETRY_DELAY * 2))
