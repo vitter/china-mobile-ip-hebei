@@ -85,6 +85,9 @@ jobs:
         env:
           PYTHONUNBUFFERED: 1
         run: |
+          # 删除旧的缓存文件，确保每次都获取最新的前缀列表
+          rm -f data/prefixes_cache.json
+          echo "🗑️  Removed old cache, will fetch fresh prefixes"
           python src/main.py --cmcc data/cmcc.txt --sample 3
 
       - name: Commit and push results
