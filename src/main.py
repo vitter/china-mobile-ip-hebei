@@ -122,6 +122,9 @@ def main():
     # load asns and fetch prefixes
     asns = load_asns_from_file(str(cmcc))
     prefixes = get_prefixes_sync(asns, use_cache=args.use_cache, concurrency=args.fetch_concurrency)
+    
+    print(f"\n🎯 Received {len(prefixes)} prefixes from fetch_prefixes")
+    print(f"📋 Starting scan with sample={args.sample}, workers={args.scan_workers}")
 
     xdb_path = project_root / 'data' / 'ip2region_v4.xdb'
     ip2 = IP2RegionClient(str(xdb_path))

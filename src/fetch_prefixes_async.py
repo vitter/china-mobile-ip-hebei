@@ -218,14 +218,24 @@ async def fetch_all(asns: List[int], use_cache=True, concurrency=5):
 
     # 在保存缓存前拆分大网段，确保缓存中保存的是已拆分的 /24 子网
     print("\n正在拆分大网段 (>=/24)...")
+    total_before = sum(len(prefixes) for prefixes in cache.values())
+    print(f"📊 Prefixes before split: {total_before}")
+    
     for asn_str, prefixes in cache.items():
-        cache[asn_str] = split_large_prefixes(prefixes)
+        split_result = split_large_prefixes(prefixes)
+        cache[asn_str] = split_result
+    
+    total_after = sum(len(prefixes) for prefixes in cache.values())
+    print(f"📊 Prefixes after split: {total_after}")
     
     save_cache(cache)
 
     all_prefixes = []
     for v in cache.values():
         all_prefixes.extend(v)
+    
+    unique_count = len(set(all_prefixes))
+    print(f"📊 Total unique prefixes to return: {unique_count}")
     
     return sorted(set(all_prefixes))
 
