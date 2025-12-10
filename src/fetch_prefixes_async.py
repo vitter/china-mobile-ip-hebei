@@ -113,17 +113,18 @@ async def fetch_all(asns: List[int], use_cache=True, concurrency=20):
         asn, prefixes = item
         cache[asn] = prefixes
 
+    # 在保存缓存前拆分大网段，确保缓存中保存的是已拆分的 /24 子网
+    print("\n正在拆分大网段 (>=/24)...")
+    for asn_str, prefixes in cache.items():
+        cache[asn_str] = split_large_prefixes(prefixes)
+    
     save_cache(cache)
 
     all_prefixes = []
     for v in cache.values():
         all_prefixes.extend(v)
-
-    # 拆分大网段为 /24 子网，提高采样准确性
-    print("\n正在拆分大网段 (>=/24)...")
-    all_prefixes = split_large_prefixes(sorted(set(all_prefixes)))
     
-    return all_prefixes
+    return sorted(set(all_prefixes))
 
 def get_prefixes_sync(asns, use_cache=True, concurrency=20):
     return asyncio.run(fetch_all(asns, use_cache=use_cache, concurrency=concurrency))
