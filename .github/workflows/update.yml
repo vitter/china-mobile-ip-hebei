@@ -94,7 +94,8 @@ jobs:
           rm -f data/prefixes_cache.json
           echo "🗑️  Removed old cache, will fetch fresh prefixes"
           # 不使用缓存，并发数设置为 5（避免 API 速率限制）
-          python src/main.py --cmcc data/cmcc.txt --sample 3 --fetch-concurrency 5
+          # sample 5: 每个 /24 网段测试 5 个 IP，提高覆盖率
+          python src/main.py --cmcc data/cmcc.txt --sample 5 --fetch-concurrency 5
 
       - name: Commit and push results
         run: |
