@@ -88,7 +88,8 @@ jobs:
           # 删除旧的缓存文件，确保每次都获取最新的前缀列表
           rm -f data/prefixes_cache.json
           echo "🗑️  Removed old cache, will fetch fresh prefixes"
-          python src/main.py --cmcc data/cmcc.txt --sample 3
+          # 不使用缓存，并发数设置为 5（避免 API 速率限制）
+          python src/main.py --cmcc data/cmcc.txt --sample 3 --fetch-concurrency 5
 
       - name: Commit and push results
         run: |

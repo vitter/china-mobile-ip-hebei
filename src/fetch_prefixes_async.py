@@ -180,7 +180,12 @@ async def fetch_all(asns: List[int], use_cache=True, concurrency=5):
         use_cache: 是否使用缓存
         concurrency: 并发数（默认 5，避免触发 API 速率限制）
     """
+    print(f"\n🔍 Total ASNs to process: {len(asns)}")
+    print(f"📋 Use cache: {use_cache}, Concurrency: {concurrency}")
+    
     cache = load_cache() if use_cache else {}
+    print(f"💾 Loaded cache contains {len(cache)} ASNs")
+    
     tasks = []
     uncached = []
 
@@ -189,6 +194,8 @@ async def fetch_all(asns: List[int], use_cache=True, concurrency=5):
         if use_cache and s in cache:
             continue
         uncached.append(asn)
+    
+    print(f"📊 Cached: {len(asns) - len(uncached)}, Need to fetch: {len(uncached)}")
 
     if not uncached:
         print("✓ All ASNs found in cache")
