@@ -28,13 +28,22 @@ jobs:
       - name: Download ip2region database (enhanced n version)
         run: |
           mkdir -p data
-          if [ ! -f data/ip2region_v4.xdb ]; then
-            echo "Downloading enhanced ip2region database (n version)..."
-            # 尝试下载增强版 n 数据库（识别率提升 23%）
-            curl -fsSL "https://github.com/hel2o/ip2region_update/releases/download/250820/ip2region_n.xdb" -o data/ip2region_v4.xdb || \
-            curl -fsSL "https://ghproxy.net/https://github.com/hel2o/ip2region_update/releases/download/250820/ip2region_n.xdb" -o data/ip2region_v4.xdb || \
-            echo "Failed to download enhanced database, workflow will use existing database"
+          echo "Downloading enhanced ip2region database (n version)..."
+          # 每次都重新下载最新的 n 版数据库（45MB，识别率提升 23%）
+          curl -fsSL "https://github.com/hel2o/ip2region_update/releases/download/250820/ip2region_n.xdb" -o data/ip2region_v4.xdb || \
+          curl -fsSL "https://ghproxy.net/https://github.com/hel2o/ip2region_update/releases/download/250820/ip2region_n.xdb" -o data/ip2region_v4.xdb || \
+          curl -fsSL "https://mirror.ghproxy.com/https://github.com/hel2o/ip2region_update/releases/download/250820/ip2region_n.xdb" -o data/ip2region_v4.xdb || {
+            echo "❌ All download sources failed!"
+            exit 1
+          }
+          # 验证下载的文件大小（n版应该约45MB）
+          size=$(stat -f%z data/ip2region_v4.xdb 2>/dev/null || stat -c%s data/ip2region_v4.xdb)
+          echo "Downloaded file size: $size bytes ($(($size/1024/1024))MB)"
+          if [ "$size" -lt 40000000 ]; then
+            echo "❌ Downloaded file too small, expected ~45MB!"
+            exit 1
           fi
+          echo "✅ Successfully downloaded n version database"
 
       - name: Download cmcc.txt from upstream
         run: |
