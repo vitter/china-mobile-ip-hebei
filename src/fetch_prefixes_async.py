@@ -207,8 +207,10 @@ async def fetch_all(asns: List[int], use_cache=True, concurrency=5):
     # 使用信号量限制并发数
     semaphore = asyncio.Semaphore(concurrency)
     connector = aiohttp.TCPConnector(limit=concurrency * 2)
+    # 设置全局超时，特别是针对大型 ASN（如 AS9808）
+    timeout = aiohttp.ClientTimeout(total=180, sock_read=90)
     
-    async with aiohttp.ClientSession(connector=connector) as session:
+    async with aiohttp.ClientSession(connector=connector, timeout=timeout) as session:
         tasks = [fetch_one(session, asn, semaphore) for asn in uncached]
         results = await asyncio.gather(*tasks, return_exceptions=True)
 
